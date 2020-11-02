@@ -1,9 +1,26 @@
 logging:
   level:
     org.springframework.cloud.gateway: TRACE
+    org.springframework.data: TRACE
 spring:
+  redis:
+    ################### redis 单机版 start ##########################
+    host: 144.131.246.146
+    port: 6379
+    timeout: 6000
+    database: 1
+    lettuce:
+      pool:
+        max-active: 10 # 连接池最大连接数（使用负值表示没有限制）,如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)
+        max-idle: 8   # 连接池中的最大空闲连接 ，默认值也是8
+        max-wait: 100 # # 等待可用连接的最大时间，单位毫秒，默认值为-1，表示永不超时。如果超过等待时间，则直接抛出JedisConnectionException
+        min-idle: 2    # 连接池中的最小空闲连接 ，默认值也是0
+      shutdown-timeout: 100ms
   cloud:
     gateway:
+#      filter:
+#        request-rate-limiter:
+#          deny-empty-key: false
       httpclient:
         ssl:
           use-insecure-trust-manager: true
@@ -57,6 +74,7 @@ spring:
       - id: remoteAddr_route
         uri: https://example.org/
         predicates:
+          - Path=/testRemoteAddr/**
           - RemoteAddr=192.168.75.0/0,192.168.75.0/32
       - id: weight_high_route
         uri: https://example.org/
@@ -68,3 +86,51 @@ spring:
         predicates:
           - Path=/testWeight/**
           - Weight=myGoroup,20
+      - id: addRequestHeader_route
+        uri: https://example.org/
+        predicates:
+          - Path=/testAddRequestHeader/**
+        fiters:
+          - AddRequestHeader=id,1
+      - id: addRequestParameter_route
+        uri: https://example.org/
+        predicates:
+          - Path=/testAddRequestParameter/**
+        filters:
+          - AddRequestParameter=id,1
+      - id: addResponseHeader_route
+        uri: https://example.org/
+        predicates:
+          - Path=/testAddResponseHeader/**
+        filters:
+          - AddResponseHeader=id,1
+      - id: retry_route
+        uri: https://example.org/
+        predicates:
+        - Path=/testRetry/**
+        filters:
+        - name: Retry
+          args:
+            retries: 2
+            methods: GET,POST
+            statuses: INTERNAL_SERVER_ERROR,BAD_REQUEST
+            series: SERVER_ERROR
+      - id: hystrix_route
+        uri: https://xxxx.com/
+        predicates:
+          - Path=/testHystrix/**
+        filters:
+          - name: Hystrix
+            args:
+              name: hystrix
+              fallbackUri: forward:/hystrixfallback
+      - id: ratelimit_route
+        uri: https://example.org/
+        predicates:
+          - Path=/testRateLimit/**
+        filters:
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 10  # 令牌桶的容积 允许用户每秒处理多少个请求。即：每秒发放的令牌数量
+              redis-rate-limiter.burstCapacity: 20  # 流速 每秒 令牌桶的容量，允许在 1s 内完成的最大请求数。即：令牌桶容量
+

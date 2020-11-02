@@ -2,6 +2,7 @@ package com.cc.gatewaydemo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -12,14 +13,16 @@ import org.springframework.context.annotation.Bean;
 //import org.springframework.security.core.userdetails.UserDetails;
 //import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-//@RestController
+@RestController
 @SpringBootApplication
 public class GatewayDemoApplication {
 
@@ -165,10 +168,104 @@ public class GatewayDemoApplication {
 //    }
 
 
+    /**
+     * AddRequestHeader过滤器工厂
+     * @param builder
+     * @return
+     */
+//    @Bean
+//    public RouteLocator addRequestHeaderCustomRouteLocator(RouteLocatorBuilder builder){
+//        String path = "/testAddRequestHeader/**";
+//        return builder.routes()
+//                .route("testAddRequestHeader",r->r.path(path)
+//                        .filters(f->f.addRequestHeader("id","1"))
+//                        .uri("https://example.org/"))
+//                .build();
+//    }
 
-//    @RequestMapping("/hystrixfallback")
-//    public String hystrixfallback() {
-//        return "This is a fallback";
+    /**
+     * AddRequestParameter过滤器工厂
+     * @param builder
+     * @return
+     */
+//    @Bean
+//    public RouteLocator addRequestParamterCustomRouteLocator(RouteLocatorBuilder builder){
+//        String path = "/testAddRequestParameter/**";
+//        return builder.routes()
+//                .route("testAddRequestParameter",r->r.path(path)
+//                        .filters(f->f.addRequestParameter("id","1"))
+//                        .uri("https://example.org/"))
+//                .build();
+//    }
+
+    /**
+     * AddResponseHeader过滤器工厂
+     * @param builder
+     * @return
+     */
+//    @Bean
+//    public RouteLocator addResponseHeaderCustomRouteLocator(RouteLocatorBuilder builder){
+//        String path = "/testAddResponseHeader/**";
+//        return builder.routes()
+//                .route("testAddResponseHeader",r->r.path(path)
+//                    .filters(f->f.addResponseHeader("id","1"))
+//                    .uri("https://example.org/"))
+//                .build();
+//    }
+
+    /**
+     * Retry过滤器工厂（第一种方法）
+     * 重试两次(不包含第一次)
+     * @param builder
+     * @return
+     */
+//    @Bean
+//    public RouteLocator retryCustomRouteLocator(RouteLocatorBuilder builder){
+//        return builder.routes().route("testRetry",r->r.path("/testRetry/**").filters(f->f.retry(2)).uri("https://example.org/")).build();
+//    }
+
+    /**
+     * Retry过滤器工厂（第二种方法）
+     * 重试两次(不包含第一次)
+     * @param
+     * @return
+     */
+//    @Bean
+//    public RouteLocator retryCustomRouteLocator(RouteLocatorBuilder builder){
+//        return builder.routes()
+//                .route("testRetry",r->r.path("/testRetry/**")
+//                                            .filters(f->f.retry(retryConfig -> {
+//                                                retryConfig.setRetries(2);
+//                                                retryConfig.setMethods(HttpMethod.GET,HttpMethod.POST);
+//                                                retryConfig.setStatuses(HttpStatus.INTERNAL_SERVER_ERROR,HttpStatus.BAD_REQUEST);
+//                                                retryConfig.setSeries(HttpStatus.Series.SERVER_ERROR);
+//                                                }))
+//                                            .uri("https://example.org/"))
+//                .build();
+//    }
+
+
+    @RequestMapping("/hystrixfallback")
+    public String hystrixfallback() {
+        return "This is a fallback";
+    }
+
+//    @Bean
+//    public KeyResolver pathKeyResolver(){
+//        return exchange -> Mono.just(exchange.getRequest().getQueryParams().getFirst("user-id"));
+//    }
+
+    /**
+     * Hystrix 过滤器工厂
+     * @param builder
+     * @return
+     */
+//    @Bean
+//    public RouteLocator hystrixCustomRouteLocator(RouteLocatorBuilder builder){
+//        return builder.routes().route("testHystrix",r->r.path("/testHystrix/**").filters(f->f.hystrix(config -> {
+//            config.setName("hystrix");
+//            config.setFallbackUri("forward:/hystrixfallback");
+//        })).uri("https://xxxx.com/")).build();
 //    }
 
 //    @Bean
