@@ -1,0 +1,70 @@
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+spring:
+  cloud:
+    gateway:
+      httpclient:
+        ssl:
+          use-insecure-trust-manager: true
+      routes:
+      - id: before_route
+        uri: https://example.org
+        predicates:
+        - Path=/testBefore/**
+        - Before=2020-11-01T10:10:32.201+08:00[Asia/Shanghai]
+      - id: after_route
+        uri: https://example.org/
+        predicates:
+        - Path=/testAfter/**
+        - After=2020-11-01T10:10:44.201+08:00[Asia/Shanghai]
+      - id: between_route
+        uri: https://example.org/
+        predicates:
+        - Path=/testBetween/**
+        - Between=2020-11-01T12:49:48.201+08:00[Asia/Shanghai],2020-11-01T12:50:50.201+08:00[Asia/Shanghai]
+      - id: cookie_route
+        uri: https://example.org/
+        predicates:
+        - Path=/testCookie/**
+        - Cookie=username,cwx491
+      - id: header_route
+        uri: https://example.org/
+        predicates:
+        - Path=/testHeader/**
+        - Header=myHeader,^[0-9]*$
+      - id: host_route
+        uri: https://example.org/
+        predicates:
+          - Path=/testHost/**
+          - Host=**.cwx.cc.com:8080,**.cwx.cc.net:8080
+      - id: method_route
+        uri: https://example.org/
+        predicates:
+          - Path=/testMethod/**
+          - Method=GET
+      - id: path_route
+        uri: https://example.org/
+        predicates:
+          - Path=/testPath/info,/testPath/{id},/testPath/**
+      - id: query_route
+        uri: https://example.org/
+        predicates:
+          # 要求存在名为“id”的请求参数，且全为数字组成
+          - Query=id,^[0-9]*$
+          # 要求存在名为aa的请求参数
+          - Query=aa
+      - id: remoteAddr_route
+        uri: https://example.org/
+        predicates:
+          - RemoteAddr=192.168.75.0/0,192.168.75.0/32
+      - id: weight_high_route
+        uri: https://example.org/
+        predicates:
+          - Path=/testWeight/**
+          - Weight=myGoroup,80
+      - id: weight_low_route
+        uri: https://www.springcloud.cc/
+        predicates:
+          - Path=/testWeight/**
+          - Weight=myGoroup,20
