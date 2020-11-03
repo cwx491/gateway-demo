@@ -250,9 +250,14 @@ public class GatewayDemoApplication {
         return "This is a fallback";
     }
 
+    /**
+     * 自定义KeyResolver
+     * 每次请求需携带参数userToken
+     * @return
+     */
 //    @Bean
-//    public KeyResolver pathKeyResolver(){
-//        return exchange -> Mono.just(exchange.getRequest().getQueryParams().getFirst("user-id"));
+//    public KeyResolver userKeyResolver(){
+//        return exchange -> Mono.just(exchange.getRequest().getQueryParams().getFirst("userToken"));
 //    }
 
     /**
@@ -266,6 +271,37 @@ public class GatewayDemoApplication {
 //            config.setName("hystrix");
 //            config.setFallbackUri("forward:/hystrixfallback");
 //        })).uri("https://xxxx.com/")).build();
+//    }
+
+    /**
+     * RewritePath过滤器工厂
+     * @param builder
+     * @return
+     */
+//    @Bean
+//    public RouteLocator rewritePathCustomRouteLocator(RouteLocatorBuilder builder){
+//        return builder.routes().route("testRewritePath",r->r.path("/testRewritePath/**").filters(f->f.rewritePath("/testRewritePath/aa","/bb")).uri("https://example.org/")).build();
+//    }
+
+//    /**
+//     * SetStatus 过滤器工厂
+//     * @param builder
+//     * @return
+//     */
+//    @Bean
+//    public RouteLocator setStatusCustomRouteLocator(RouteLocatorBuilder builder){
+//        return builder.routes().route("setStatus",r->r.path("/setStatus/**").filters(f->f.setStatus(HttpStatus.BAD_REQUEST.value())).uri("https://example.org/")).build();
+//    }
+
+    /**
+     * StripPrefix 过滤器工厂
+     * 对请求/aa/bb/mypath/的请求，转换为https://example.org/mypath
+     * @param builder
+     * @return
+     */
+//    @Bean
+//    public RouteLocator stripPrefixCustomRouteLocator(RouteLocatorBuilder builder){
+//        return builder.routes().route("stripPrefix",r->r.path("/aa/bb/**").filters(f->f.stripPrefix(2)).uri("https://example.org/")).build();
 //    }
 
 //    @Bean

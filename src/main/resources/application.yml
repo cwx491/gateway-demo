@@ -8,7 +8,7 @@ spring:
     host: 144.131.246.146
     port: 6379
     timeout: 6000
-    database: 1
+    database: 2
     lettuce:
       pool:
         max-active: 10 # 连接池最大连接数（使用负值表示没有限制）,如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)
@@ -20,6 +20,7 @@ spring:
     gateway:
 #      filter:
 #        request-rate-limiter:
+#          empty-key-status-code: 5555
 #          deny-empty-key: false
       httpclient:
         ssl:
@@ -131,6 +132,25 @@ spring:
         filters:
           - name: RequestRateLimiter
             args:
-              redis-rate-limiter.replenishRate: 10  # 令牌桶的容积 允许用户每秒处理多少个请求。即：每秒发放的令牌数量
-              redis-rate-limiter.burstCapacity: 20  # 流速 每秒 令牌桶的容量，允许在 1s 内完成的最大请求数。即：令牌桶容量
-
+              rate-limiter: "#{@redisRateResolver}"
+#              redis-rate-limiter.replenishRate: 10  # 令牌桶的容积 允许用户每秒处理多少个请求。即：每秒发放的令牌数量
+#              redis-rate-limiter.burstCapacity: 20  # 流速 每秒 令牌桶的容量，允许在 1s 内完成的最大请求数。即：令牌桶容量
+              key-resolver: "#{@userKeyResolver}"
+      - id: stripprefix_route
+        uri: https://example.org/
+        predicates:
+          - Path=/aa/bb/**
+        filters:
+          - StripPrefix=2
+      - id: rewitepath_route
+        uri: https://example.org/
+        predicates:
+          - Path=/testRewritePath/**
+        filters:
+          - RewritePath=/testRewritePath/aa,/bb
+      - id: setstatus_route
+        uri: https://example.org/
+        predicates:
+          - Path=/setStatus/**
+        filters:
+          - SetStatus=BAD_REQUEST
