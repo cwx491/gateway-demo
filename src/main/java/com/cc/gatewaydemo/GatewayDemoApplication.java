@@ -1,9 +1,16 @@
 package com.cc.gatewaydemo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.gateway.filter.FilterDefinition;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
+import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
+import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -12,19 +19,30 @@ import org.springframework.context.annotation.Bean;
 //import org.springframework.security.core.userdetails.User;
 //import org.springframework.security.core.userdetails.UserDetails;
 //import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @SpringBootApplication
 public class GatewayDemoApplication {
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public static void main(String[] args) {
         SpringApplication.run(GatewayDemoApplication.class, args);
@@ -304,6 +322,35 @@ public class GatewayDemoApplication {
 //        return builder.routes().route("stripPrefix",r->r.path("/aa/bb/**").filters(f->f.stripPrefix(2)).uri("https://example.org/")).build();
 //    }
 
+
+
+    /**
+     * 自定义token全局过滤器
+     * @return
+     */
+//    @Bean
+//    public GlobalFilter tokenFilter() throws Exception{
+//        logger.info("经过全局过滤器tokenFilter");
+//        return (exchange, chain) -> {
+//            boolean flag = StringUtils.isEmpty(exchange.getRequest().getHeaders().getFirst("token"));
+//            if(flag){
+//                String token = "tokenTest";
+//                ServerHttpRequest request = exchange.getRequest().mutate().header("mytoken",token).build();
+//                return chain.filter(exchange.mutate().request(request).build());
+//            }else{
+//                ServerHttpRequest request = exchange.getRequest().mutate().header("mytoken",exchange.getRequest().getHeaders().getFirst("token")).build();
+//                return chain.filter(exchange);
+//            }
+//        };
+//    }
+
+    @RequestMapping("/testGlobalFilter")
+    public String testGlobalFilter(ServerHttpRequest request) {
+        String token = request.getHeaders().getFirst("mytoken");
+        logger.info("mytoken={}",token);
+        return token;
+    }
+
 //    @Bean
 //    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
 //        return builder.routes()
@@ -352,4 +399,47 @@ public class GatewayDemoApplication {
 //        UserDetails user = User.withDefaultPasswordEncoder().username("user").password("password").roles("USER").build();
 //        return new MapReactiveUserDetailsService(user);
 //    }
+
+    /**
+     * 动态新增路由
+     */
+    @RequestMapping("/addRoute")
+     public void saveRoute(){
+         RestTemplate restTemplate = new RestTemplate();
+         RouteDefinition routeDefinition = routeDefinition();
+         HttpEntity<RouteDefinition> request = new HttpEntity<>(routeDefinition);
+         String url = "http://localhost:8080/actuator/gateway/routes/hystrix";
+         ResponseEntity<Void> obj = restTemplate.postForEntity(url,request,Void.class);
+    }
+
+    /**
+     * 动态删除路由
+     */
+    @RequestMapping("/deleteRoute")
+    public void deleteRoute(){
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:8080/actuator/gateway/routes/hystrix";
+        restTemplate.delete(url);
+    }
+
+     private RouteDefinition routeDefinition(){
+        RouteDefinition routeDefinition = new RouteDefinition();
+        //  设置路由编号
+        routeDefinition.setId("hystrix");
+        // 设置URI
+        routeDefinition.setUri(URI.create("lb://USER"));
+        // 设置路由顺序
+        routeDefinition.setOrder(1000);
+        // 定义断言
+        PredicateDefinition predicateDefinition = new PredicateDefinition("Path=/hystrix/**");
+        List<PredicateDefinition> predicates = new ArrayList<>();
+        predicates.add(predicateDefinition);
+        routeDefinition.setPredicates(predicates);
+        // 定义过滤器
+        FilterDefinition filterDefinition = new FilterDefinition("AddRequestHeader=id,1");
+        List<FilterDefinition> filters = new ArrayList<>();
+        filters.add(filterDefinition);
+        routeDefinition.setFilters(filters);
+        return routeDefinition;
+     }
 }

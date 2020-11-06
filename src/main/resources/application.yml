@@ -2,6 +2,7 @@ logging:
   level:
     org.springframework.cloud.gateway: TRACE
     org.springframework.data: TRACE
+    com.cc.gatewaydemo: TRACE
 spring:
   redis:
     ################### redis 单机版 start ##########################
@@ -154,3 +155,23 @@ spring:
           - Path=/setStatus/**
         filters:
           - SetStatus=BAD_REQUEST
+      - id: global_token_test
+        uri: http://localhost:8080
+        predicates:
+          - Path=/global_token_test/**
+        filters:
+          - RewritePath=/global_token_test,/testGlobalFilter
+      - id: eureka-client-demo
+        uri: lb://eureka-ckient-demo
+        predicates:
+          - Path=/eureka-client/**
+        filters:
+          - StripPrefix=1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://ttf:ttf123@eureka1:1111/eureka
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${spring.application.instance_id:${server.port}}
